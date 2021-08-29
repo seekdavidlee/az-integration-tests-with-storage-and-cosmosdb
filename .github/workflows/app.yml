@@ -33,10 +33,32 @@ jobs:
     name: Build and Deploy
     needs: setup
     runs-on: windows-latest
+    services:
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite
+        ports:
+           - 10000:10000
+           - 10001:10001
+
+      azure-cosmos-emulator:
+        image: mcr.microsoft.com/cosmosdb/windows/azure-cosmos-emulator
+        ports:
+           - 8081:8081
+           - 8900:8900
+           - 8901:8901
+           - 8902:8902
+           - 10250:10250
+           - 10251:10251
+           - 10252:10252
+           - 10253:10253
+           - 10254:10254
+           - 10255:10255
+           - 10256:1025
+           - 10350:10350
     steps:
       - uses: actions/checkout@v2
-      - uses: docker://mcr.microsoft.com/azure-storage/azurite
-      - uses: docker://mcr.microsoft.com/cosmosdb/windows/azure-cosmos-emulator
+      - uses: docker://
+      - uses: docker://
 
       - name: Setup .NET SDK 5.0.x
         uses: actions/setup-dotnet@v1
@@ -47,9 +69,6 @@ jobs:
         name: Integration Tests
         run: |
             $unitTestFilePath = "${{ env.RUNNER_TEMP }}\TestResults\unittests.xml"
-            md $env:LOCALAPPDATA\CosmosDBEmulator\bind-mount 2>null
-            docker run --name azure-cosmosdb-emulator --memory 2GB --mount "type=bind,source=$env:LOCALAPPDATA\CosmosDBEmulator\bind-mount,destination=C:\CosmosDB.Emulator\bind-mount" --interactive --tty -p 8081:8081 -p 8900:8900 -p 8901:8901 -p 8902:8902 -p 10250:10250 -p 10251:10251 -p 10252:10252 -p 10253:10253 -p 10254:10254 -p 10255:10255 -p 10256:10256 -p 10350:10350 mcr.microsoft.com/cosmosdb/windows/azure-cosmos-emulator
-            docker run -p 10000:10000 -p 10001:10001 mcr.microsoft.com/azure-storage/azurite
             dotnet test --logger "junit;LogFilePath=$unitTestFilePath"
 
       - name: Publish test results
