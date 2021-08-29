@@ -45,7 +45,7 @@ jobs:
         name: Integration Tests
         run: |
             $unitTestFilePath = "${{ env.RUNNER_TEMP }}\TestResults\unittests.xml"
-            dotnet test --logger "junit;LogFilePath=$unitTestFilePath"
+            dotnet test \HotelReservationTests\HotelReservationTests.csproj --logger "junit;LogFilePath=$unitTestFilePath"
 
       - name: Publish test results
         if: ${{ always() }}
