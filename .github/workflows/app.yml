@@ -32,29 +32,7 @@ jobs:
   build_deploy:
     name: Build and Deploy
     needs: setup
-    runs-on: ubuntu-latest
-    services:
-      azurite:
-        image: mcr.microsoft.com/azure-storage/azurite
-        ports:
-           - 10000:10000
-           - 10001:10001
-
-      azure-cosmos-emulator:
-        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator
-        ports:
-           - 8081:8081
-           - 8900:8900
-           - 8901:8901
-           - 8902:8902
-           - 10250:10250
-           - 10251:10251
-           - 10252:10252
-           - 10253:10253
-           - 10254:10254
-           - 10255:10255
-           - 10256:1025
-           - 10350:10350
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -66,7 +44,8 @@ jobs:
       - id: integrationtest
         name: Integration Tests
         run: |
-            dotnet test ~/HotelReservationTests/HotelReservationTests.csproj --logger junit;LogFilePath=${{ env.RUNNER_TEMP }}\TestResults\unittests.xml
+            $unitTestFilePath = "${{ env.RUNNER_TEMP }}\TestResults\unittests.xml"
+            dotnet test --logger "junit;LogFilePath=$unitTestFilePath"
 
       - name: Publish test results
         if: ${{ always() }}
