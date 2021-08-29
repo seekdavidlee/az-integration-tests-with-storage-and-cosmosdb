@@ -40,11 +40,10 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '5.0.x'
-
-      - name: azurite
-        run: |
-          npm install azurite
-          npx azurite-table &
+          
+      - run: npm install -g azurite
+      - shell: bash
+        run: azurite-table &
 
       - id: integrationtest
         name: Integration Tests
