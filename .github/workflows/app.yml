@@ -35,7 +35,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-
+      - uses: southpolesteve/cosmos-emulator-github-action@v1
       - name: Setup .NET SDK 5.0.x
         uses: actions/setup-dotnet@v1
         with:
@@ -45,7 +45,8 @@ jobs:
         name: Integration Tests
         run: |
             $unitTestFilePath = "${{ env.RUNNER_TEMP }}\TestResults\unittests.xml"
-            dotnet test \HotelReservationTests\HotelReservationTests.csproj --logger "junit;LogFilePath=$unitTestFilePath"
+            dir
+            dotnet test --logger "junit;LogFilePath=$unitTestFilePath"
 
       - name: Publish test results
         if: ${{ always() }}
