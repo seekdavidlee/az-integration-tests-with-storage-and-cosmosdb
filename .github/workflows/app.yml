@@ -1,0 +1,58 @@
+on: 
+  push:
+  workflow_dispatch:
+    inputs:
+      environmentselector:
+        description: 'Environment selector'     
+        required: false
+        default: 'default'
+
+jobs:
+  setup:
+    name: Choose Secrets Environment Job
+    runs-on: windows-latest
+    steps:
+      - id: setup
+        name: Setup Environment Setp
+        run: |
+          $envSelector = "${{ github.event.inputs.environmentselector }}"
+          Write-Host "Environment Selector: $envSelector Branch ${{ github.ref }}"
+          if ($envSelector -eq '' -or $envSelector -eq 'default') {            
+            if ('${{ github.ref }}' -eq 'refs/heads/main') { 
+              echo "::set-output name=build_env::PROD_"
+            } else {
+              echo "::set-output name=build_env::DEV_"
+            }
+          } else {
+            echo "::set-output name=build_env::$envSelector"
+          }
+    outputs:
+      build_env: ${{ steps.setup.outputs.build_env }}
+
+  build_deploy:
+    name: Build and Deploy
+    needs: setup
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: southpolesteve/cosmos-emulator-github-action@v1
+      - name: Setup .NET SDK 5.0.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+          
+      - run: npm install -g azurite
+      - shell: bash
+        run: azurite-table &
+
+      - id: integrationtest
+        name: Integration Tests
+        run: |
+            $unitTestFilePath = "${{ env.RUNNER_TEMP }}\TestResults\unittests.xml"
+            dotnet test --logger "junit;LogFilePath=$unitTestFilePath"
+
+      - name: Publish test results
+        if: ${{ always() }}
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        with:
+          files: ${{ env.RUNNER_TEMP }}/TestResults/*.xml
