@@ -1,0 +1,59 @@
+on: 
+  push:
+  workflow_dispatch:
+    inputs:
+      environmentselector:
+        description: 'Environment selector'     
+        required: false
+        default: 'default'
+
+jobs:
+  setup:
+    name: Choose Secrets Environment Job
+    runs-on: windows-latest
+    steps:
+      - id: setup
+        name: Setup Environment Setp
+        run: |
+          $envSelector = "${{ github.event.inputs.environmentselector }}"
+          Write-Host "Environment Selector: $envSelector Branch ${{ github.ref }}"
+          if ($envSelector -eq '' -or $envSelector -eq 'default') {            
+            if ('${{ github.ref }}' -eq 'refs/heads/main') { 
+              echo "::set-output name=build_env::PROD_"
+            } else {
+              echo "::set-output name=build_env::DEV_"
+            }
+          } else {
+            echo "::set-output name=build_env::$envSelector"
+          }
+    outputs:
+      build_env: ${{ steps.setup.outputs.build_env }}
+
+  build_deploy:
+    name: Build and Deploy
+    needs: setup
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker://mcr.microsoft.com/azure-storage/azurite
+      - uses: docker://mcr.microsoft.com/cosmosdb/windows/azure-cosmos-emulator
+
+      - name: Setup .NET SDK 5.0.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+
+      - id: integrationtest
+        name: Integration Tests
+        run: |
+            $unitTestFilePath = "${{ env.RUNNER_TEMP }}\TestResults\unittests.xml"
+            md $env:LOCALAPPDATA\CosmosDBEmulator\bind-mount 2>null
+            docker run --name azure-cosmosdb-emulator --memory 2GB --mount "type=bind,source=$env:LOCALAPPDATA\CosmosDBEmulator\bind-mount,destination=C:\CosmosDB.Emulator\bind-mount" --interactive --tty -p 8081:8081 -p 8900:8900 -p 8901:8901 -p 8902:8902 -p 10250:10250 -p 10251:10251 -p 10252:10252 -p 10253:10253 -p 10254:10254 -p 10255:10255 -p 10256:10256 -p 10350:10350 mcr.microsoft.com/cosmosdb/windows/azure-cosmos-emulator
+            docker run -p 10000:10000 -p 10001:10001 mcr.microsoft.com/azure-storage/azurite
+            dotnet test --logger "junit;LogFilePath=$unitTestFilePath"
+
+      - name: Publish test results
+        if: ${{ always() }}
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        with:
+          files: ${{ env.RUNNER_TEMP }}/TestResults/*.xml
