@@ -57,8 +57,6 @@ jobs:
            - 10350:10350
     steps:
       - uses: actions/checkout@v2
-      - uses: docker://
-      - uses: docker://
 
       - name: Setup .NET SDK 5.0.x
         uses: actions/setup-dotnet@v1
