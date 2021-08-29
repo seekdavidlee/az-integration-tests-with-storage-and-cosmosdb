@@ -12,3 +12,6 @@ This step installs and run the Storage Emulator known as azurite. Note that it i
 - shell: bash
 run: azurite-table &
 ```
+
+## Build Status
+![Build status](https://github.com/seekdavidlee/az-integration-tests-with-storage-and-cosmosdb/actions/workflows/app.yml/badge.svg)
