@@ -41,6 +41,11 @@ jobs:
         with:
           dotnet-version: '5.0.x'
 
+      - name: azurite
+        run: |
+          npm install azurite
+          npx azurite-table &
+
       - id: integrationtest
         name: Integration Tests
         run: |
