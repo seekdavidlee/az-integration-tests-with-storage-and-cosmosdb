@@ -66,7 +66,7 @@ jobs:
       - id: integrationtest
         name: Integration Tests
         run: |
-            dotnet test /HotelReservationTests/HotelReservationTests.csproj --logger junit;LogFilePath=${{ env.RUNNER_TEMP }}\TestResults\unittests.xml
+            dotnet test ~/HotelReservationTests/HotelReservationTests.csproj --logger junit;LogFilePath=${{ env.RUNNER_TEMP }}\TestResults\unittests.xml
 
       - name: Publish test results
         if: ${{ always() }}
