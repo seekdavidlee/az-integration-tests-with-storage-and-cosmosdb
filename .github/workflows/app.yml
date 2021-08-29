@@ -41,7 +41,7 @@ jobs:
            - 10001:10001
 
       azure-cosmos-emulator:
-        image: mcr.microsoft.com/cosmosdb/windows/azure-cosmos-emulator
+        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator
         ports:
            - 8081:8081
            - 8900:8900
